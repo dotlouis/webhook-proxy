@@ -3,7 +3,6 @@
 export default async function handler(req, res) {
   const { url: forwardingUrl, filters: rawFilters = [] } = req.query;
 
-  console.log("query param", req.query);
   const filters = JSON.parse(rawFilters);
 
   if (!forwardingUrl) {
@@ -16,21 +15,19 @@ export default async function handler(req, res) {
   }
 
   let payload;
+  // There are no payload in GET and HEAD requests
   if (req.method !== "GET" && req.method !== "HEAD") {
     payload = req.body;
     if (payload) {
+      // get discriminant filter (the first we find)
       let filter;
-      // get discriminant filter
       for (let f of filters) {
         if (payload[f[0]] == f[1]) {
           filter = { key: f[0], value: f[1] };
           break;
         }
       }
-      // filters.reduce((acc, curr) => {
-      //   const applyFilter = payload[curr[0]] == curr[1];
-      //   return acc || applyFilter;
-      // }, false);
+
       if (filter) {
         console.log(`Filtering request with "${filter.key} = ${filter.value}"`);
         return res
@@ -43,6 +40,7 @@ export default async function handler(req, res) {
     }
   }
 
+  // otherwise forward the method, the content-type and the payload
   const proxyReq = {
     method: req.method,
     headers: {
@@ -52,8 +50,6 @@ export default async function handler(req, res) {
     },
     ...(payload ? { body: JSON.stringify(payload) } : {})
   };
-
-  console.log("Proxying request", proxyReq);
 
   const proxyRes = await fetch(forwardingUrl, proxyReq);
   res
