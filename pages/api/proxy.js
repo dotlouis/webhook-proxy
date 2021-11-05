@@ -1,9 +1,9 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 
-const envFilters = process.env.PAYLOAD_FILTERS || [];
+const envFilters = JSON.parse(process.env.PAYLOAD_FILTERS) || [];
 
 export default async function handler(req, res) {
-  const { url: forwardingUrl, filters: urlFilters = [] } = req.query;
+  const { url: forwardingUrl, filters: urlFilters = '[]' } = req.query;
 
   const filters = [...JSON.parse(urlFilters), ...envFilters];
 
